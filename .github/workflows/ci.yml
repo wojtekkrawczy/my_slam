@@ -1,0 +1,26 @@
+name: C++ CI
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build libeigen3-dev libopencv-dev libceres-dev libgtest-dev libfmt-dev
+          git clone --depth 1 https://github.com/strasdat/Sophus.git /tmp/Sophus
+          cmake -S /tmp/Sophus -B /tmp/Sophus/build -G Ninja -DBUILD_SOPHUS_TESTS=OFF -DBUILD_SOPHUS_EXAMPLES=OFF
+          sudo cmake --install /tmp/Sophus/build
+
+      - name: Configure
+        run: cmake --preset debug-asan
+
+      - name: Build
+        run: cmake --build --preset debug-asan
+
+      - name: Test
+        run: ctest --preset debug-asan
